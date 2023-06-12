@@ -19,7 +19,7 @@ Console.Write("Add a message (or `quit` to exit): ");
 string userInput = Console.ReadLine();
 List<User> users = new List<User>() { user };
 
-while (userInput.ToLower() == "quit")
+while (userInput.ToLower() != "quit")
 {
     while (userInput.ToLower() != "log out")
     {
