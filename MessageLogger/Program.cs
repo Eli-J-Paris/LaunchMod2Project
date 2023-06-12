@@ -1,25 +1,22 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using MessageLogger;
-//Intro
-Console.WriteLine("Welcome to Message Logger!");
-Console.WriteLine();
-Console.WriteLine("Let's create a user pofile for you.");
+Intro();
+//creating new user need to also find exsisting
+User user = CreateUser();
 
-//DRY1CreateUserMethod
-//Insert User into Database
-Console.Write("What is your name? ");
-string name = Console.ReadLine();
-Console.Write("What is your username? (one word, no spaces!) ");
-string username = Console.ReadLine();
-User user = new User(name, username);
+LogInMessage();
+while (true) 
+{ AddUserMessage(user); }
 
+
+//log in message
 Console.WriteLine();
 Console.WriteLine("To log out of your user profile, enter `log out`.");
-
 Console.WriteLine();
 Console.Write("Add a message (or `quit` to exit): ");
 
 string userInput = Console.ReadLine();
+//will I need this if reading from database?
 List<User> users = new List<User>() { user };
 
 //have to logout before quiting.
@@ -47,11 +44,14 @@ while (userInput.ToLower() != "quit")
     {
         //DRY1 CreateUserMethod
         //Insert User into Database
-        Console.Write("What is your name? ");
-        name = Console.ReadLine();
-        Console.Write("What is your username? (one word, no spaces!) ");
-        username = Console.ReadLine();
-        user = new User(name, username);
+        user = CreateUser();
+
+        //Console.Write("What is your name? ");
+        //name = Console.ReadLine();
+        //Console.Write("What is your username? (one word, no spaces!) ");
+        //username = Console.ReadLine();
+        //user = new User(name, username);
+
         users.Add(user);
 
         //Insert Message Into Database if !log out
@@ -63,7 +63,7 @@ while (userInput.ToLower() != "quit")
     {
         //loging in doesn't display users Messages
         Console.Write("What is your username? ");
-        username = Console.ReadLine();
+        string username = Console.ReadLine();
         user = null;
         //Read From Database to Login
         foreach (var existingUser in users)
@@ -98,3 +98,92 @@ foreach (var u in users)
 {
     Console.WriteLine($"{u.Name} wrote {u.Messages.Count} messages.");
 }
+
+
+
+//Back End Methods
+static User CreateUser()
+{
+    Console.Write("What is your name? ");
+    string name = Console.ReadLine();
+    Console.Write("What is your username? (one word, no spaces!) ");
+    string username = Console.ReadLine();
+    User user = new User(name, username);
+    bool exsists = DoesUserExsist(user);
+    if(exsists == false)
+    {
+        Console.WriteLine("User Already Exsists");
+        //log in method
+    }
+    else
+    {
+        using (var context = new MessageLoggerContext())
+        {
+            context.Users.Add(user);
+            context.SaveChanges();
+        }
+    }
+    return user;
+
+}
+
+static bool DoesUserExsist(User user)
+{
+    using(var context = new MessageLoggerContext())
+    {
+       if(context.Users.Contains(user) || !context.Users.Any())
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+        
+        
+    }
+}
+
+static void AddUserMessage(User user)
+{
+    Console.Write("Add a message: ");
+    //insert Into Database if !log out
+    string userInput = Console.ReadLine();
+    Console.WriteLine();
+    Message newMessge = new Message(userInput);
+    using (var context = new MessageLoggerContext())
+    {
+
+         user.Messages.Add(new Message(userInput));
+         context.Messages.AddRange(user.Messages.Last());
+         context.SaveChanges();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+//Front End Methods
+static void Intro()
+{
+    Console.WriteLine("Welcome to Message Logger!");
+    Console.WriteLine();
+    Console.WriteLine("Let's create a user pofile for you.");
+}
+
+static void LogInMessage()
+{
+    Console.WriteLine();
+    Console.WriteLine("To log out of your user profile, enter `log out`.");
+    Console.WriteLine();
+    Console.Write("Add a message (or `quit` to exit): ");
+}
+
