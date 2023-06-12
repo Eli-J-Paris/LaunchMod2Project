@@ -150,13 +150,14 @@ static void AddUserMessage(User user)
     //insert Into Database if !log out
     string userInput = Console.ReadLine();
     Console.WriteLine();
-    Message newMessge = new Message(userInput);
+    
     using (var context = new MessageLoggerContext())
     {
-
-         user.Messages.Add(new Message(userInput));
-         context.Messages.AddRange(user.Messages.Last());
-         context.SaveChanges();
+        User databaseUser = context.Users.Find(user.Id);
+        Message newMessage = new Message(userInput);
+        newMessage.User = databaseUser;
+        context.Messages.Add(newMessage);
+        context.SaveChanges();
     }
 }
 
