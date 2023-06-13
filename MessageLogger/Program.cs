@@ -184,11 +184,7 @@ static void DisplayAllUserMessages(User user)
     using (var context = new MessageLoggerContext())
     {
          User DBUser = context.Users.Include(m => m.Messages).First(u => u.Username == user.Username);
-        //foreach (var message in context.Messages.Include(m => m.User))
-        //{
-        //    Console.WriteLine($"{message.User.Username}: {message.Content}");
-        //    Console.WriteLine();
-        //}
+
         foreach(var message in DBUser.Messages)
         {
             Console.WriteLine($"{message.User.Username}: {message.Content}");
