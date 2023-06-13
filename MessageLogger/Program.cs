@@ -1,30 +1,22 @@
-﻿// See https://aka.ms/new-console-template for more information
-using MessageLogger;
+﻿using MessageLogger;
 using Microsoft.EntityFrameworkCore;
 
 string userInput = string.Empty;
+
 Intro();
 User user = NewOrExisting();
 LogInMessage();
 
-  
-//AddUserMessage(user);
 
-
-
-
-
-//will I need this if reading from database?
-List<User> users = new List<User>() { user };
-
-//have to logout before quiting.
 while (userInput.ToLower() != "quit")
 {
     while (userInput.ToLower() != "log out")
     {
+        ChirpClear();
         DisplayAllUserMessages(user);
         userInput = AddUserMessage(user);
     }
+    ChirpClear();
 
     user = NewOrExisting();
     if(user == null)
@@ -35,56 +27,8 @@ while (userInput.ToLower() != "quit")
     {
         userInput = string.Empty;
     }
-    //Console.Write("Would you like to log in a `new` or `existing` user? Or, `quit`? ");
-    //userInput = Console.ReadLine();
-    //if (userInput.ToLower() == "new")
-    //{
-        
-    //    user = CreateUser();
-
-
-    //    //Insert Message Into Database if !log out
-    //    Console.Write("Add a message: ");
-    //    userInput = Console.ReadLine();
-
-    //}
-    //else if (userInput.ToLower() == "existing")
-    //{
-    //    //loging in doesn't display users Messages
-    //    Console.Write("What is your username? ");
-    //    string username = Console.ReadLine();
-    //    user = null;
-    //    //Read From Database to Login
-    //    foreach (var existingUser in users)
-    //    {
-    //        if (existingUser.Username == username)
-    //        {
-    //            user = existingUser;
-    //        }
-    //    }
-        
-    //    if (user != null)
-    //    {
-    //        //Insert Message Into Database if !log out
-    //        Console.Write("Add a message: ");
-    //        userInput = Console.ReadLine();
-    //    }
-    //    else
-    //    {
-    //        //If Reached Program Quits;
-    //        Console.WriteLine("could not find user");
-    //        userInput = "quit";
-
+   
 }
-
-//Read From Database
-Console.WriteLine("Thanks for using Message Logger!");
-foreach (var u in users)
-{
-    Console.WriteLine($"{u.Name} wrote {u.Messages.Count} messages.");
-}
-
-
 
 //Back End Methods
 static User CreateUser()
@@ -97,7 +41,8 @@ static User CreateUser()
     bool exsists = DoesUserExsist(user);
     if (exsists == false)
     {
-        Console.WriteLine("UserName Already Taken");
+        ChirpClear();
+        Console.WriteLine("User Name Already Taken");
         user = NewOrExisting();
         return user;
     }
@@ -190,6 +135,7 @@ static User LogIn()
         }
         else
         {
+            ChirpClear();
             Console.WriteLine("USERNAME NOT FOUND");
             return user;
         }
@@ -205,6 +151,7 @@ static User NewOrExisting()
         Console.WriteLine("Would you like to log in a `new` or `existing` account? Or, `quit`?");
         string userInput = Console.ReadLine();
         User user;
+        ChirpClear();
         if (userInput.ToLower() == "new")
         {
             user = CreateUser();
@@ -236,17 +183,19 @@ static void DisplayAllUserMessages(User user)
 {
     using (var context = new MessageLoggerContext())
     {
-        user = context.Users.First(u => u.Username == user.Username);
-        //foreach (var message in context.Messages.Include(m=> m.User))
+         User DBUser = context.Users.Include(m => m.Messages).First(u => u.Username == user.Username);
+        //foreach (var message in context.Messages.Include(m => m.User))
         //{
         //    Console.WriteLine($"{message.User.Username}: {message.Content}");
         //    Console.WriteLine();
         //}
-        foreach(var message in user.Messages)
+        foreach(var message in DBUser.Messages)
         {
             Console.WriteLine($"{message.User.Username}: {message.Content}");
             Console.WriteLine();
+
         }
+
     }
 }
 
@@ -259,8 +208,7 @@ static void DisplayAllUserMessages(User user)
 //Front End Methods
 static void Intro()
 {
-    Console.WriteLine("Welcome to Message Logger!");
-    Console.WriteLine();
+    ChirpClear();
     Console.WriteLine("Let's create a user pofile for you.");
 }
 
@@ -272,3 +220,15 @@ static void LogInMessage()
     Console.Write("Add a message (or `quit` to exit): ");
 }
 
+static void ChirpClear()
+{
+    Console.Clear();
+    Console.WriteLine(" _______ _     _ _____  ______  _____      \r\n |       |_____|   |   |_____/ |_____]     \r\n |_____  |     | __|__ |    \\_ |           \r\n                                     ");
+    Console.WriteLine();
+
+}
+
+static void NewUserWelcomeMessage(User user)
+{
+    Console.WriteLine($"Welcome to Chirp{user.Username}");
+}
