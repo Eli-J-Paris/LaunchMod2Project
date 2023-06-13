@@ -5,8 +5,7 @@ Intro();
 User user = CreateUser();
 
 LogInMessage();
-while (true) 
-{ AddUserMessage(user); }
+AddUserMessage(user); 
 
 
 //log in message
@@ -42,8 +41,7 @@ while (userInput.ToLower() != "quit")
     userInput = Console.ReadLine();
     if (userInput.ToLower() == "new")
     {
-        //DRY1 CreateUserMethod
-        //Insert User into Database
+        
         user = CreateUser();
 
         //Console.Write("What is your name? ");
@@ -151,6 +149,7 @@ static void AddUserMessage(User user)
     string userInput = Console.ReadLine();
     Console.WriteLine();
     
+    //if not log out or quit
     using (var context = new MessageLoggerContext())
     {
         User databaseUser = context.Users.Find(user.Id);
@@ -159,6 +158,8 @@ static void AddUserMessage(User user)
         context.Messages.Add(newMessage);
         context.SaveChanges();
     }
+
+    //return userinput so it can function inside of the loop
 }
 
 
