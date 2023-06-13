@@ -1,19 +1,16 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using MessageLogger;
 Intro();
-//creating new user need to also find exsisting
-User user = CreateUser();
+
+User user = NewOrExisting();
 
 LogInMessage();
-AddUserMessage(user); 
+
+AddUserMessage(user);
 
 
-//log in message
-Console.WriteLine();
-Console.WriteLine("To log out of your user profile, enter `log out`.");
-Console.WriteLine();
-Console.Write("Add a message (or `quit` to exit): ");
 
+Console.WriteLine("breach");
 string userInput = Console.ReadLine();
 //will I need this if reading from database?
 List<User> users = new List<User>() { user };
@@ -102,26 +99,54 @@ foreach (var u in users)
 //Back End Methods
 static User CreateUser()
 {
-    Console.Write("What is your name? ");
-    string name = Console.ReadLine();
-    Console.Write("What is your username? (one word, no spaces!) ");
-    string username = Console.ReadLine();
-    User user = new User(name, username);
-    bool exsists = DoesUserExsist(user);
-    if(exsists == false)
+    bool loop = true;
+    while (loop)
     {
-        Console.WriteLine("User Already Exsists");
-        //log in method
-    }
-    else
-    {
-        using (var context = new MessageLoggerContext())
+        Console.Write("What is your name? ");
+        string name = Console.ReadLine();
+        Console.Write("What is your username? (one word, no spaces!) ");
+        string username = Console.ReadLine();
+        User user = new User(name, username);
+        bool exsists = DoesUserExsist(user);
+        if (exsists == false)
         {
-            context.Users.Add(user);
-            context.SaveChanges();
+            Console.WriteLine("UserName Already Taken");
+            while (true)
+            {
+                Console.WriteLine("Would you Like to 'login' or create a 'new' account");
+                string input = Console.ReadLine();
+                if (input.ToLower() == "login")
+                {
+                   user = LogIn();
+                    break; 
+                }
+                else if (input.ToLower() == "new")
+                {
+                    break;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid Input");
+                }
+            }
+ 
+            
         }
+        else
+        {
+            using (var context = new MessageLoggerContext())
+            {
+                context.Users.Add(user);
+                context.SaveChanges();
+            }
+            return user;
+        }
+
+
+        
     }
-    return user;
+    
+
 
 }
 
@@ -129,7 +154,17 @@ static bool DoesUserExsist(User user)
 {
     using(var context = new MessageLoggerContext())
     {
-       if(context.Users.Contains(user) || !context.Users.Any())
+        User userExists;
+        try
+        {
+             userExists = context.Users.First(u => u.Username == user.Username);
+        }
+        catch (InvalidOperationException)
+        {
+            userExists = null;
+        }
+        
+       if(userExists != null)
         {
             return false;
         }
@@ -163,7 +198,65 @@ static void AddUserMessage(User user)
 }
 
 
+static User LogIn()
+{
+    Console.WriteLine("Please enter in your username");
+    string UserInput = Console.ReadLine();
+    User user = null;
+    using(var context = new MessageLoggerContext())
+    {
+        try
+        {
+            user = context.Users.First(u => u.Username == UserInput);
+        }
+        catch (InvalidOperationException)
+        {
+            user = null;
+        }
+       
+        if(user != null)
+        {
+            return user;
+        }
+        else
+        {
+            Console.WriteLine("USERNAME NOT FOUND");
+            return user;
+        }
+    }
+   
 
+}
+
+static User NewOrExisting()
+{
+    while (true)
+    {
+        Console.WriteLine("Would you like to log in a `new` or `existing` account?");
+        string userInput = Console.ReadLine();
+        User user;
+        if (userInput.ToLower() == "new")
+        {
+            user = CreateUser();
+            return user;
+        }
+        else if (userInput.ToLower() == "existing")
+        {
+            user = LogIn();
+
+            if(user != null)
+            {
+                return user;
+            }
+            
+        }
+        else
+        {
+            Console.WriteLine("Invalid Input");
+        }
+    }
+    
+}
 
 
 
