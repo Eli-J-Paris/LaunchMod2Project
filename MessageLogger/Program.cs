@@ -1,17 +1,19 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using MessageLogger;
+using Microsoft.EntityFrameworkCore;
+
+string userInput = string.Empty;
 Intro();
-
 User user = NewOrExisting();
-
 LogInMessage();
 
-AddUserMessage(user);
+  
+//AddUserMessage(user);
 
 
 
-Console.WriteLine("breach");
-string userInput = Console.ReadLine();
+
+
 //will I need this if reading from database?
 List<User> users = new List<User>() { user };
 
@@ -20,70 +22,58 @@ while (userInput.ToLower() != "quit")
 {
     while (userInput.ToLower() != "log out")
     {
-        user.Messages.Add(new Message(userInput));
-
-        foreach (var message in user.Messages)
-        {
-            //Read from Database
-            Console.WriteLine($"{user.Name} {message.CreatedAt:t}: {message.Content}");
-        }
-
-        Console.Write("Add a message: ");
-        //insert Into Database if !log out
-        userInput = Console.ReadLine();
-        Console.WriteLine();
+        DisplayAllUserMessages(user);
+        userInput = AddUserMessage(user);
     }
 
-    Console.Write("Would you like to log in a `new` or `existing` user? Or, `quit`? ");
-    userInput = Console.ReadLine();
-    if (userInput.ToLower() == "new")
+    user = NewOrExisting();
+    if(user == null)
     {
-        
-        user = CreateUser();
-
-        //Console.Write("What is your name? ");
-        //name = Console.ReadLine();
-        //Console.Write("What is your username? (one word, no spaces!) ");
-        //username = Console.ReadLine();
-        //user = new User(name, username);
-
-        users.Add(user);
-
-        //Insert Message Into Database if !log out
-        Console.Write("Add a message: ");
-        userInput = Console.ReadLine();
-
+        userInput = "quit";
     }
-    else if (userInput.ToLower() == "existing")
+    else
     {
-        //loging in doesn't display users Messages
-        Console.Write("What is your username? ");
-        string username = Console.ReadLine();
-        user = null;
-        //Read From Database to Login
-        foreach (var existingUser in users)
-        {
-            if (existingUser.Username == username)
-            {
-                user = existingUser;
-            }
-        }
-        
-        if (user != null)
-        {
-            //Insert Message Into Database if !log out
-            Console.Write("Add a message: ");
-            userInput = Console.ReadLine();
-        }
-        else
-        {
-            //If Reached Program Quits;
-            Console.WriteLine("could not find user");
-            userInput = "quit";
-
-        }
-        
+        userInput = string.Empty;
     }
+    //Console.Write("Would you like to log in a `new` or `existing` user? Or, `quit`? ");
+    //userInput = Console.ReadLine();
+    //if (userInput.ToLower() == "new")
+    //{
+        
+    //    user = CreateUser();
+
+
+    //    //Insert Message Into Database if !log out
+    //    Console.Write("Add a message: ");
+    //    userInput = Console.ReadLine();
+
+    //}
+    //else if (userInput.ToLower() == "existing")
+    //{
+    //    //loging in doesn't display users Messages
+    //    Console.Write("What is your username? ");
+    //    string username = Console.ReadLine();
+    //    user = null;
+    //    //Read From Database to Login
+    //    foreach (var existingUser in users)
+    //    {
+    //        if (existingUser.Username == username)
+    //        {
+    //            user = existingUser;
+    //        }
+    //    }
+        
+    //    if (user != null)
+    //    {
+    //        //Insert Message Into Database if !log out
+    //        Console.Write("Add a message: ");
+    //        userInput = Console.ReadLine();
+    //    }
+    //    else
+    //    {
+    //        //If Reached Program Quits;
+    //        Console.WriteLine("could not find user");
+    //        userInput = "quit";
 
 }
 
@@ -99,55 +89,27 @@ foreach (var u in users)
 //Back End Methods
 static User CreateUser()
 {
-    bool loop = true;
-    while (loop)
+    Console.Write("What is your name? ");
+    string name = Console.ReadLine();
+    Console.Write("What is your username? (one word, no spaces!) ");
+    string username = Console.ReadLine();
+    User user = new User(name, username);
+    bool exsists = DoesUserExsist(user);
+    if (exsists == false)
     {
-        Console.Write("What is your name? ");
-        string name = Console.ReadLine();
-        Console.Write("What is your username? (one word, no spaces!) ");
-        string username = Console.ReadLine();
-        User user = new User(name, username);
-        bool exsists = DoesUserExsist(user);
-        if (exsists == false)
-        {
-            Console.WriteLine("UserName Already Taken");
-            while (true)
-            {
-                Console.WriteLine("Would you Like to 'login' or create a 'new' account");
-                string input = Console.ReadLine();
-                if (input.ToLower() == "login")
-                {
-                   user = LogIn();
-                    break; 
-                }
-                else if (input.ToLower() == "new")
-                {
-                    break;
-                }
-                else
-                {
-                    Console.WriteLine("Invalid Input");
-                }
-            }
- 
-            
-        }
-        else
-        {
-            using (var context = new MessageLoggerContext())
-            {
-                context.Users.Add(user);
-                context.SaveChanges();
-            }
-            return user;
-        }
-
-
-        
+        Console.WriteLine("UserName Already Taken");
+        user = NewOrExisting();
+        return user;
     }
-    
-
-
+    else
+    {
+        using (var context = new MessageLoggerContext())
+        {
+            context.Users.Add(user);
+            context.SaveChanges();
+        }
+        return user;
+    }
 }
 
 static bool DoesUserExsist(User user)
@@ -177,24 +139,32 @@ static bool DoesUserExsist(User user)
     }
 }
 
-static void AddUserMessage(User user)
+static string AddUserMessage(User user)
 {
-    Console.Write("Add a message: ");
-    //insert Into Database if !log out
-    string userInput = Console.ReadLine();
-    Console.WriteLine();
-    
-    //if not log out or quit
-    using (var context = new MessageLoggerContext())
+    while (true)
     {
-        User databaseUser = context.Users.Find(user.Id);
-        Message newMessage = new Message(userInput);
-        newMessage.User = databaseUser;
-        context.Messages.Add(newMessage);
-        context.SaveChanges();
+        Console.Write("Add a message: ");
+        //insert Into Database if !log out
+        string userInput = Console.ReadLine();
+        Console.WriteLine();
+
+        if (userInput.ToLower() != "log out")
+        {
+            using (var context = new MessageLoggerContext())
+            {
+                User databaseUser = context.Users.Find(user.Id);
+                Message newMessage = new Message(userInput);
+                newMessage.User = databaseUser;
+                context.Messages.Add(newMessage);
+                context.SaveChanges();
+            }
+        }
+        else
+        {
+            return userInput;
+        }
     }
 
-    //return userinput so it can function inside of the loop
 }
 
 
@@ -232,7 +202,7 @@ static User NewOrExisting()
 {
     while (true)
     {
-        Console.WriteLine("Would you like to log in a `new` or `existing` account?");
+        Console.WriteLine("Would you like to log in a `new` or `existing` account? Or, `quit`?");
         string userInput = Console.ReadLine();
         User user;
         if (userInput.ToLower() == "new")
@@ -250,6 +220,10 @@ static User NewOrExisting()
             }
             
         }
+        else if(userInput == "quit")
+        {
+            return user = null;
+        }
         else
         {
             Console.WriteLine("Invalid Input");
@@ -258,7 +232,23 @@ static User NewOrExisting()
     
 }
 
-
+static void DisplayAllUserMessages(User user)
+{
+    using (var context = new MessageLoggerContext())
+    {
+        user = context.Users.First(u => u.Username == user.Username);
+        //foreach (var message in context.Messages.Include(m=> m.User))
+        //{
+        //    Console.WriteLine($"{message.User.Username}: {message.Content}");
+        //    Console.WriteLine();
+        //}
+        foreach(var message in user.Messages)
+        {
+            Console.WriteLine($"{message.User.Username}: {message.Content}");
+            Console.WriteLine();
+        }
+    }
+}
 
 
 
