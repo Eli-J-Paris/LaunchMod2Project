@@ -2,17 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 
 string userInput = string.Empty;
-HourWithMostMessages();
-//MostPopularWordUser();
-//MostPopularWord();
-//EachWordCount();
-//OrderMessages();
-
 
 Intro();
 User user = NewOrExisting();
 LogInMessage();
-
+ChirpClear();
 
 while (userInput.ToLower() != "quit")
 {
@@ -177,7 +171,10 @@ static User NewOrExisting()
         {
             return user = null;
         }
-        else if(user)
+        else if(userInput == "ADMIN")
+        {
+            AdminBackEnd();
+        }
         else
         {
             Console.WriteLine("Invalid Input");
@@ -208,6 +205,7 @@ static void OrderMessages()
 {
     using(var context = new MessageLoggerContext())
     {
+        ChirpDB();
         var orderedUsers = context.Users
             .Include(u=>u.Messages)
             .OrderByDescending(u =>u.Messages.Count);
@@ -228,7 +226,7 @@ static void EachWordCount()
 {
     using(var context = new MessageLoggerContext())
     {
-        
+        ChirpDB();
         var words = new List<string>();
         
         foreach(var message in context.Messages)
@@ -247,7 +245,7 @@ static void MostPopularWord()
 {
     using (var context = new MessageLoggerContext())
     {
-
+        ChirpDB();
         var words = new List<string>();
 
         foreach (var message in context.Messages)
@@ -264,9 +262,12 @@ static void MostPopularWordUser()
 {
     using(var context = new MessageLoggerContext())
     {
-        Console.WriteLine("Please Enter in the Username of the User you are trying to find");
+        ChirpDB();
+
+        Console.Write("Please Enter in the Username of the User you are trying to find: ");
         var user = LogInAdmin();
-        if(user != null)
+        bool exists = DoesUserExsist(user);
+        if(exists == false)
         {
             //var dbUser = context.Users.Find(user.Id);
             var SpecificUser = context.Users.Include(u => u.Messages)
@@ -279,9 +280,10 @@ static void MostPopularWordUser()
                 words.Add(word.Content);
             }
             var mostPopular = words.GroupBy(s => s).OrderByDescending(g => g.Count()).First();
-            Console.WriteLine($"The most common word writen by {user.Username} is '{mostPopular.Key}' writen {mostPopular.Count()} times");
+            Console.WriteLine($"\nThe most common word writen by {user.Username} is '{mostPopular.Key}' writen {mostPopular.Count()} times");
 
         }
+
     }
 }
 
@@ -322,15 +324,74 @@ static void HourWithMostMessages()
 {
     using (var context = new MessageLoggerContext())
     {
-        //this is probably just ordering by first occurence
-        var time = context.Messages.OrderBy(t => t.CreatedAt).ToList();
-        Console.WriteLine($"The hour with the most messages written is {time[0].CreatedAt.ToLocalTime():h tt}");
+        ChirpDB();
+
+        var hours = context.Messages.GroupBy(t => t.CreatedAt.ToLocalTime().Hour);
+        int mostmessage = 0;
+        int hour = 0;
+        foreach(var h in hours)
+        {
+            if(h.Count() > mostmessage)
+            {
+                mostmessage = h.Count();
+                hour = h.Key;
+            }
+        }
+        Console.WriteLine($"The hour with the most messages written is {hour}:00 with {mostmessage} messages");
     }
 }
 
 
 
+static string AdminBackEnd()
+{
+    Loading();
+    while (true)
+    {
+        ChirpDB();
+        ListOptions();
+        string input = UserInput();
+        if (input == "log out")
+        {
+            ChirpClear();
+            return input;
+        }
 
+        Select(input);
+    }
+
+}
+
+
+static string UserInput()
+{
+   string input =  Console.ReadLine();
+   return input;
+}
+
+static void Select(string s)
+{
+    if(s == "1")
+    {
+        OrderMessages();
+        BackButton();
+    }
+    else if(s == "2")
+    {
+        MostPopularWord();
+        BackButton();
+    }
+    else if(s== "3")
+    {
+        MostPopularWordUser();
+        BackButton();
+    }
+    else if (s == "4")
+    {
+        HourWithMostMessages();
+        BackButton();
+    }
+}
 
 
 //Front End Methods
@@ -350,8 +411,10 @@ static void LogInMessage()
 
 static void ChirpClear()
 {
+    Console.ForegroundColor = ConsoleColor.White;
+    Console.BackgroundColor = ConsoleColor.Blue;
     Console.Clear();
-    Console.WriteLine(" _______ _     _ _____  ______  _____      \r\n |       |_____|   |   |_____/ |_____]     \r\n |_____  |     | __|__ |    \\_ |           \r\n                                     ");
+    Console.WriteLine("   ____ _   _ ___ ____  ____    \r\n  / ___| | | |_ _|  _ \\|  _ \\   \r\n | |   | |_| || || |_) | |_) |  \r\n | |___|  _  || ||  _ <|  __/   \r\n  \\____|_| |_|___|_| \\_\\_|  ");
     Console.WriteLine();
 
 }
@@ -359,4 +422,47 @@ static void ChirpClear()
 static void NewUserWelcomeMessage(User user)
 {
     Console.WriteLine($"Welcome to Chirp{user.Username}");
+}
+
+static void Loading()
+{
+    for (int i = 0; i < 2; i++)
+    {
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.BackgroundColor = ConsoleColor.Black;
+        Console.Clear();
+        Console.WriteLine("Loading Data");
+        Thread.Sleep(250);
+        Console.Clear();
+        Console.WriteLine("Loading Data.");
+        Thread.Sleep(250);
+        Console.Clear();
+        Console.WriteLine("Loading Data. .");
+        Thread.Sleep(500);
+        Console.Clear();
+        Console.WriteLine("Loading Data. . .");
+        Thread.Sleep(250);
+        Console.Clear();
+    }
+}
+
+static void ListOptions()
+{
+    Console.WriteLine("1: USERS ORDERED BY MESSAGE COUNT\n \n \n");
+    Console.WriteLine("2: MOST POPULAR WORD\n \n \n");
+    Console.WriteLine("3: USERS MOST POPULAR WORD\n \n \n");
+    Console.WriteLine("4: HOUR WITH THE MOST MESSAGES");
+}
+
+static void ChirpDB()
+{
+
+    Console.Clear();
+    Console.WriteLine("   ____ _   _ ___ ____  ____     ____    _  _____  _    ____    _    ____  _____ \r\n  / ___| | | |_ _|  _ \\|  _ \\   |  _ \\  / \\|_   _|/ \\  | __ )  / \\  / ___|| ____|\r\n | |   | |_| || || |_) | |_) |  | | | |/ _ \\ | | / _ \\ |  _ \\ / _ \\ \\___ \\|  _|  \r\n | |___|  _  || ||  _ <|  __/   | |_| / ___ \\| |/ ___ \\| |_) / ___ \\ ___) | |___ \r\n  \\____|_| |_|___|_| \\_\\_|      |____/_/   \\_\\_/_/   \\_\\____/_/   \\_\\____/|_____|");
+    Console.WriteLine("\nWelcome admin to log out please enter 'log out'\n");
+}
+
+static void BackButton()
+{
+    Console.ReadLine();
 }
