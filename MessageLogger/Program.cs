@@ -9,32 +9,32 @@ HourWithMostMessages();
 //OrderMessages();
 
 
-//Intro();
-//User user = NewOrExisting();
-//LogInMessage();
+Intro();
+User user = NewOrExisting();
+LogInMessage();
 
 
-//while (userInput.ToLower() != "quit")
-//{
-//    while (userInput.ToLower() != "log out")
-//    {
-//        ChirpClear();
-//        DisplayAllUserMessages(user);
-//        userInput = AddUserMessage(user);
-//    }
-//    ChirpClear();
+while (userInput.ToLower() != "quit")
+{
+    while (userInput.ToLower() != "log out")
+    {
+        ChirpClear();
+        DisplayAllUserMessages(user);
+        userInput = AddUserMessage(user);
+    }
+    ChirpClear();
 
-//    user = NewOrExisting();
-//    if(user == null)
-//    {
-//        userInput = "quit";
-//    }
-//    else
-//    {
-//        userInput = string.Empty;
-//    }
-   
-//}
+    user = NewOrExisting();
+    if (user == null)
+    {
+        userInput = "quit";
+    }
+    else
+    {
+        userInput = string.Empty;
+    }
+
+}
 
 //Back End Methods
 static User CreateUser()
@@ -177,6 +177,7 @@ static User NewOrExisting()
         {
             return user = null;
         }
+        else if(user)
         else
         {
             Console.WriteLine("Invalid Input");
