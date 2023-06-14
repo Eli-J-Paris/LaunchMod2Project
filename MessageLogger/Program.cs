@@ -2,33 +2,39 @@
 using Microsoft.EntityFrameworkCore;
 
 string userInput = string.Empty;
+HourWithMostMessages();
+//MostPopularWordUser();
+//MostPopularWord();
+//EachWordCount();
+//OrderMessages();
 
-Intro();
-User user = NewOrExisting();
-LogInMessage();
+
+//Intro();
+//User user = NewOrExisting();
+//LogInMessage();
 
 
-while (userInput.ToLower() != "quit")
-{
-    while (userInput.ToLower() != "log out")
-    {
-        ChirpClear();
-        DisplayAllUserMessages(user);
-        userInput = AddUserMessage(user);
-    }
-    ChirpClear();
+//while (userInput.ToLower() != "quit")
+//{
+//    while (userInput.ToLower() != "log out")
+//    {
+//        ChirpClear();
+//        DisplayAllUserMessages(user);
+//        userInput = AddUserMessage(user);
+//    }
+//    ChirpClear();
 
-    user = NewOrExisting();
-    if(user == null)
-    {
-        userInput = "quit";
-    }
-    else
-    {
-        userInput = string.Empty;
-    }
+//    user = NewOrExisting();
+//    if(user == null)
+//    {
+//        userInput = "quit";
+//    }
+//    else
+//    {
+//        userInput = string.Empty;
+//    }
    
-}
+//}
 
 //Back End Methods
 static User CreateUser()
@@ -42,7 +48,7 @@ static User CreateUser()
     if (exsists == false)
     {
         ChirpClear();
-        Console.WriteLine("User Name Already Taken");
+        Console.WriteLine("Username Already Taken");
         user = NewOrExisting();
         return user;
     }
@@ -195,6 +201,130 @@ static void DisplayAllUserMessages(User user)
     }
 }
 
+
+//users ordered by number of messages created (most to least)
+static void OrderMessages()
+{
+    using(var context = new MessageLoggerContext())
+    {
+        var orderedUsers = context.Users
+            .Include(u=>u.Messages)
+            .OrderByDescending(u =>u.Messages.Count);
+        Console.WriteLine("Users ordered by number of messages");
+        foreach (var user in orderedUsers)
+        {
+            Console.WriteLine($"{user.Username} has written {user.Messages.Count} messages");
+        }
+    }
+    
+    
+}
+
+
+//most commonly used word for messages (by user and overall)
+
+static void EachWordCount()
+{
+    using(var context = new MessageLoggerContext())
+    {
+        
+        var words = new List<string>();
+        
+        foreach(var message in context.Messages)
+        {
+            words.Add(message.Content);
+        }
+
+        var mostPopular = words.GroupBy(s=> s).OrderByDescending(g=>g.Count());
+        mostPopular.ToList().ForEach(g => Console.WriteLine("{0}: {1}", g.Key, g.Count()));
+
+        //Console.WriteLine($"The most common word across all accounts is: {mostpopularWord}");
+    }
+}
+
+static void MostPopularWord()
+{
+    using (var context = new MessageLoggerContext())
+    {
+
+        var words = new List<string>();
+
+        foreach (var message in context.Messages)
+        {
+            words.Add(message.Content);
+        }
+       
+        var mostPopular = words.GroupBy(s => s).OrderByDescending(g => g.Count()).First();
+        Console.WriteLine($"The most common word across all accounts is '{mostPopular.Key}' writen {mostPopular.Count()} times");
+    }
+}
+
+static void MostPopularWordUser()
+{
+    using(var context = new MessageLoggerContext())
+    {
+        Console.WriteLine("Please Enter in the Username of the User you are trying to find");
+        var user = LogInAdmin();
+        if(user != null)
+        {
+            //var dbUser = context.Users.Find(user.Id);
+            var SpecificUser = context.Users.Include(u => u.Messages)
+                .First(u => u.Id == user.Id);
+
+            var words = new List<string>();
+
+            foreach(var word in SpecificUser.Messages)
+            {
+                words.Add(word.Content);
+            }
+            var mostPopular = words.GroupBy(s => s).OrderByDescending(g => g.Count()).First();
+            Console.WriteLine($"The most common word writen by {user.Username} is '{mostPopular.Key}' writen {mostPopular.Count()} times");
+
+        }
+    }
+}
+
+
+static User LogInAdmin()
+{
+    string UserInput = Console.ReadLine();
+    User user = null;
+    using (var context = new MessageLoggerContext())
+    {
+        try
+        {
+            user = context.Users.First(u => u.Username == UserInput);
+        }
+        catch (InvalidOperationException)
+        {
+            user = null;
+        }
+
+        if (user != null)
+        {
+            return user;
+        }
+        else
+        {
+            Console.WriteLine("USERNAME NOT FOUND");
+            return user;
+        }
+    }
+}
+
+
+
+
+
+//the hour with the most messages
+static void HourWithMostMessages()
+{
+    using (var context = new MessageLoggerContext())
+    {
+        var time = context.Messages.OrderBy(t => t.CreatedAt.ToLocalTime()).ToList();
+        Console.WriteLine($"The hour with the most messages written is {time[0].CreatedAt.ToLocalTime().ToString("h tt")}");
+    }
+}
 
 
 
