@@ -321,8 +321,9 @@ static void HourWithMostMessages()
 {
     using (var context = new MessageLoggerContext())
     {
-        var time = context.Messages.OrderBy(t => t.CreatedAt.ToLocalTime()).ToList();
-        Console.WriteLine($"The hour with the most messages written is {time[0].CreatedAt.ToLocalTime().ToString("h tt")}");
+        //this is probably just ordering by first occurence
+        var time = context.Messages.OrderBy(t => t.CreatedAt).ToList();
+        Console.WriteLine($"The hour with the most messages written is {time[0].CreatedAt.ToLocalTime():h tt}");
     }
 }
 
