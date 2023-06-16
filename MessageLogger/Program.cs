@@ -16,6 +16,7 @@ while (userInput.ToLower() != "quit")
         DisplayAllUserMessages(user);
         userInput = AddUserMessage(user);
     }
+
     ChirpClear();
 
     user = NewOrExisting();
@@ -273,12 +274,16 @@ static void MostPopularWordUser()
             var SpecificUser = context.Users.Include(u => u.Messages)
                 .First(u => u.Id == user.Id);
 
-            var words = new List<string>();
+            string listOfWords = string.Empty;
 
             foreach(var word in SpecificUser.Messages)
             {
-                words.Add(word.Content);
+                listOfWords += " " + word.Content.ToLower();
             }
+
+            char[] delimiterChars = { ' ', ',', '.', ':', '\t' };
+            string[] words = listOfWords.Split(delimiterChars);
+
             var mostPopular = words.GroupBy(s => s).OrderByDescending(g => g.Count()).First();
             Console.WriteLine($"\nThe most common word writen by {user.Username} is '{mostPopular.Key}' writen {mostPopular.Count()} times");
 
